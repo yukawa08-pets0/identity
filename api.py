@@ -20,14 +20,14 @@ class AccessPayload(BaseModel):
 
 from fastapi import Header
 from tokens import parse_token
-from di import get_uow_custom
+from di import get_uow
 from uow import UnitOfWork
 from typing import Annotated
 from flows import register_cmd
 from fastapi import Response, HTTPException
 from clock import now_datetime
 
-UoWDep = Annotated[UnitOfWork, Depends(get_uow_custom)]
+UoWDep = Annotated[UnitOfWork, Depends(get_uow)]
 
 
 async def authn_middleware(

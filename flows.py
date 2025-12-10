@@ -159,6 +159,7 @@ async def refresh_cmd(raw_token: str, uow: UnitOfWork) -> Tokens:
         if not old_refresh:
             raise AppException("Token not found")
         if not old_refresh.is_valid(now):
+            # добавить удаление сессии reuse detection
             raise AppException("Token already used or expired or revoked")
 
         session = session.mark_token_used_by_token_hash(old_refresh.hash, now)
