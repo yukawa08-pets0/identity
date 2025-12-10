@@ -121,7 +121,8 @@ class UserSession:
         for t in self.refresh_tokens:
             if t.hash == token_hash:
                 refresh_tokens = (*refresh_tokens, t.mark_used(used_at))
-            refresh_tokens = (*refresh_tokens, t)
+            else:
+                refresh_tokens = (*refresh_tokens, t)
 
         return UserSession(
             id=self.id,

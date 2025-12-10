@@ -92,21 +92,21 @@ from mail import send_to_mail
 
 async def reset_password_query(email: str, uow: UnitOfWork):
     async with uow:
-        user_may = await uow.users.get_by_email_for_authenticate(email)
-        if not user_may:
+        user = await uow.users.get_by_email_for_authenticate(email)
+        if user is None:
             return
 
-        token = issue_opaque()
+        raw_token = issue_opaque()
 
         domain = PasswordReset.new(
-            token_hash=hash_sha256(token),
+            token_hash=hash_sha256(raw_token),
             expire_at=expiration_calc_datetime(minutes=60),
-            user_id=user_may.id,
+            user_id=user.id,
             used_at=None,
         )
 
         await uow.password_resets.add(domain)
-        send_to_mail(to=user_may.email, body=token)
+    send_to_mail(to=user.email, body=raw_token)
 
 
 async def reset_password_cmd(token_in: str, new_password: str, uow: UnitOfWork):
@@ -156,11 +156,11 @@ async def refresh_cmd(raw_token: str, uow: UnitOfWork) -> Tokens:
             (t for t in session.refresh_tokens if t.hash == hash_),
             None,
         )
-
         if not old_refresh:
             raise AppException("Token not found")
         if not old_refresh.is_valid(now):
             raise AppException("Token already used or expired or revoked")
+
         session = session.mark_token_used_by_token_hash(old_refresh.hash, now)
         refresh = issue_opaque()
         refresh_hash = hash_sha256(refresh)
@@ -186,7 +186,7 @@ async def refresh_cmd(raw_token: str, uow: UnitOfWork) -> Tokens:
     return Tokens(access_token=access_token, refresh_token=refresh)
 
 
-async def logout(refresh_raw: str, uow: UnitOfWork):
+async def logout_cmd(refresh_raw: str, uow: UnitOfWork):
     async with uow:
         hash_ = hash_sha256(refresh_raw)
         session = await uow.user_sessions.get_by_token_hash(hash_)
@@ -200,7 +200,7 @@ async def logout(refresh_raw: str, uow: UnitOfWork):
         await uow.commit()
 
 
-async def logout_all(user_id: UUID, uow: UnitOfWork):
+async def logout_all_cmd(user_id: UUID, uow: UnitOfWork):
     async with uow:
         now = now_datetime()
         sessions = await uow.user_sessions.get_by_user_id(

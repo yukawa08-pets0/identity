@@ -20,12 +20,16 @@ async def get_uow() -> UnitOfWork:
     )
 
 
+def get_session():
+    return LocalSession
+
+
 async def get_uow_custom(
-    session_factory: SessionFactory = LocalSession,
     user_repo_factory: UserRepoFactory = UserRepo,
     user_session_repo_factory: UserSessionRepoFactory = UserSessionRepo,
     password_reset_repo: PasswordResetRepoFactory = PasswordResetRepo,
 ) -> UnitOfWork:
+    session_factory: SessionFactory = LocalSession
     return UnitOfWork(
         session_factory=session_factory,
         user_repo_factory=user_repo_factory,
@@ -44,6 +48,6 @@ async def get_uow_opened():
         yield session
 
 
-async def get_session():
+async def get_session_opened():
     async with LocalSession() as session:
         yield session
