@@ -71,7 +71,7 @@ from domain import RefreshToken
 def refresh_token_to_orm(domain: RefreshToken) -> RefreshTokenORM:
     return RefreshTokenORM(
         id=domain.id,
-        token_hash=domain.token_hash,
+        token_hash=domain.hash,
         expire_at=domain.expire_at,
         used_at=domain.used_at,
         revoked_at=domain.revoked_at,
@@ -83,7 +83,7 @@ def refresh_token_to_domain(orm: RefreshTokenORM) -> RefreshToken:
     return RefreshToken(
         id=orm.id,
         session_id=orm.session_id,
-        token_hash=orm.token_hash,
+        hash=orm.token_hash,
         expire_at=orm.expire_at,
         revoked_at=orm.revoked_at,
         used_at=orm.used_at,

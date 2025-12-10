@@ -43,8 +43,7 @@ async def register(
             register_in.username, register_in.email, register_in.password, uow
         )
     except AppException as e:
-        return HTTPException(status_code=409, detail={"detail": e.detail})
-    return None
+        raise HTTPException(status_code=409, detail={"detail": e.detail})
 
 
 class LoginDto(BaseModel):
@@ -64,7 +63,7 @@ async def login(
     try:
         tokens = await login_cmd(dto.email, dto.password, uow)
     except AppException as e:
-        return HTTPException(status_code=404, detail={"detail": e})
+        raise HTTPException(status_code=404, detail={"detail": e.detail})
     response.set_cookie(
         "refresh",
         value=tokens.refresh_token,
@@ -88,7 +87,7 @@ async def reset_password_request(
     try:
         await reset_password_query(email, uow)
     except AppException as e:
-        return HTTPException(status_code=404, detail={"detail": e})
+        raise HTTPException(status_code=404, detail={"detail": e.detail})
 
 
 class ResetPasswordConfirm(BaseModel):
@@ -104,7 +103,7 @@ async def reset_password_confirm(
     try:
         await reset_password_cmd(token, dto.new_password, uow)
     except AppException as e:
-        return HTTPException(status_code=404, detail={"detail": e})
+        raise HTTPException(status_code=404, detail={"detail": e.detail})
 
 
 from flows import refresh_cmd
@@ -120,7 +119,7 @@ async def refresh(
     try:
         tokens = await refresh_cmd(refresh_token, uow)
     except AppException as e:
-        return HTTPException(status_code=404, detail={"detail": e})
+        raise HTTPException(status_code=404, detail={"detail": e.detail})
 
     response.set_cookie(
         "refresh",
@@ -140,6 +139,7 @@ from uuid import UUID
 
 class AccessPayload(BaseModel):
     sub: UUID
+    sid: UUID
     iat: int
     exp: int
 
@@ -155,12 +155,12 @@ async def authn_middleware(
     authorization: str | None = Header(default=None, alias="Authorization"),
 ) -> AccessPayload:
     if not authorization:
-        raise Exception("not authenticate")
+        raise AppException(detail="not authenticate")
 
     type_, _, param = authorization.partition(" ")
 
     if type_ != "Bearer":
-        raise Exception("invalid token type")
+        raise AppException("invalid token type")
 
     return AccessPayload(**parse_token(param))
 
@@ -175,7 +175,7 @@ async def logout_current_session(
     try:
         await logout(refresh_raw=refresh_token, uow=uow)
     except AppException as e:
-        return HTTPException(status_code=404, detail={"detail": e})
+        raise HTTPException(status_code=404, detail={"detail": e.detail})
     response.delete_cookie("refresh")
 
 
@@ -188,5 +188,5 @@ async def logout_all_user_sessions(
     try:
         await logout_all(user_id=access_token.sub, uow=uow)
     except AppException as e:
-        return HTTPException(status_code=404, detail={"detail": e})
+        raise HTTPException(status_code=404, detail={"detail": e.detail})
     response.delete_cookie("refresh")

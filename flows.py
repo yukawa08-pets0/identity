@@ -69,7 +69,7 @@ async def login_cmd(email: str, password: str, uow: UnitOfWork) -> Tokens:
             id=uuid4(),
             expire_at=expiration_calc_datetime(days=15),
             session_id=session_id,
-            token_hash=hash_sha256(refresh_token),
+            hash=hash_sha256(refresh_token),
             used_at=None,
         )
 
@@ -153,7 +153,7 @@ async def refresh_cmd(raw_token: str, uow: UnitOfWork) -> Tokens:
             raise AppException("Session already revoked or expired")
 
         old_refresh = next(
-            (t for t in session.refresh_tokens if t.token_hash == hash_),
+            (t for t in session.refresh_tokens if t.hash == hash_),
             None,
         )
 
@@ -161,7 +161,7 @@ async def refresh_cmd(raw_token: str, uow: UnitOfWork) -> Tokens:
             raise AppException("Token not found")
         if not old_refresh.is_valid(now):
             raise AppException("Token already used or expired or revoked")
-        session = session.mark_token_used_by_token_hash(old_refresh.token_hash, now)
+        session = session.mark_token_used_by_token_hash(old_refresh.hash, now)
         refresh = issue_opaque()
         refresh_hash = hash_sha256(refresh)
         now = now_datetime()
@@ -169,7 +169,7 @@ async def refresh_cmd(raw_token: str, uow: UnitOfWork) -> Tokens:
         new_refresh = RefreshToken.new(
             id=uuid4(),
             session_id=old_refresh.session_id,
-            token_hash=refresh_hash,
+            hash=refresh_hash,
             expire_at=min(expiration_calc_datetime(days=15), session.expire_at),
             revoked_at=None,
             used_at=None,
@@ -189,7 +189,6 @@ async def refresh_cmd(raw_token: str, uow: UnitOfWork) -> Tokens:
 async def logout(refresh_raw: str, uow: UnitOfWork):
     async with uow:
         hash_ = hash_sha256(refresh_raw)
-        print(hash_)
         session = await uow.user_sessions.get_by_token_hash(hash_)
         if session is None:
             raise AppException("Session not exists")

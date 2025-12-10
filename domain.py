@@ -8,7 +8,7 @@ from typing import Optional
 @dataclass(frozen=True, slots=True)
 class RefreshToken:
     id: UUID
-    token_hash: str
+    hash: str
     expire_at: datetime
     used_at: datetime | None
     revoked_at: datetime | None
@@ -19,7 +19,7 @@ class RefreshToken:
         cls,
         id: UUID,
         session_id: UUID,
-        token_hash: str,
+        hash: str,
         expire_at: datetime,
         used_at: datetime | None,
         revoked_at: datetime | None = None,
@@ -27,7 +27,7 @@ class RefreshToken:
         return cls(
             id=id,
             session_id=session_id,
-            token_hash=token_hash,
+            hash=hash,
             expire_at=expire_at,
             used_at=used_at,
             revoked_at=revoked_at,
@@ -37,17 +37,17 @@ class RefreshToken:
         return RefreshToken(
             id=self.id,
             session_id=self.session_id,
-            token_hash=self.token_hash,
+            hash=self.hash,
             expire_at=self.expire_at,
             used_at=now,
             revoked_at=self.revoked_at,
         )
 
-    def use_from_refresh(self, token_hash: str) -> "RefreshToken":
+    def use_from_refresh(self, hash: str) -> "RefreshToken":
         return RefreshToken(
             id=uuid4(),
             session_id=self.session_id,
-            token_hash=token_hash,
+            hash=hash,
             expire_at=self.expire_at,
             used_at=self.used_at,
             revoked_at=self.revoked_at,
@@ -57,17 +57,17 @@ class RefreshToken:
         return RefreshToken(
             id=self.id,
             session_id=self.session_id,
-            token_hash=self.token_hash,
+            hash=self.hash,
             expire_at=self.expire_at,
             used_at=self.used_at,
             revoked_at=revoked_at,
         )
 
-    def change_hash(self, new_hash: str) -> "RefreshToken":
+    def change_hash(self, hash: str) -> "RefreshToken":
         return RefreshToken(
             id=self.id,
             session_id=self.session_id,
-            token_hash=new_hash,
+            hash=hash,
             expire_at=self.expire_at,
             used_at=self.used_at,
             revoked_at=self.revoked_at,
@@ -115,14 +115,17 @@ class UserSession:
         return self.expire_at > now and self.revoked_at is None
 
     def mark_token_used_by_token_hash(
-        self, token_hash: str, now: datetime
+        self, token_hash: str, used_at: datetime
     ) -> "UserSession":
-        refresh_tokens_list = [
-            t.mark_used(now) for t in self.refresh_tokens if token_hash == t.token_hash
-        ]
+        refresh_tokens = tuple()
+        for t in self.refresh_tokens:
+            if t.hash == token_hash:
+                refresh_tokens = (*refresh_tokens, t.mark_used(used_at))
+            refresh_tokens = (*refresh_tokens, t)
+
         return UserSession(
             id=self.id,
-            refresh_tokens=(*refresh_tokens_list,),
+            refresh_tokens=refresh_tokens,
             user_id=self.user_id,
             expire_at=self.expire_at,
             revoked_at=self.revoked_at,
@@ -140,14 +143,15 @@ class UserSession:
     def revoke_refresh_token(
         self, token: RefreshToken, revoked_at: datetime
     ) -> "UserSession":
-        refresh_tokens = [
-            t.revoke(revoked_at)
-            for t in self.refresh_tokens
-            if t.id == token.id or t.token_hash == token.token_hash
-        ]
+        refresh_tokens = tuple()
+        for t in self.refresh_tokens:
+            if t.id == token.id:
+                refresh_tokens = (*refresh_tokens, t.mark_used(revoked_at))
+            refresh_tokens = (*refresh_tokens, t)
+
         return UserSession(
             id=self.id,
-            refresh_tokens=(*refresh_tokens,),
+            refresh_tokens=refresh_tokens,
             user_id=self.user_id,
             expire_at=self.expire_at,
             revoked_at=self.revoked_at,

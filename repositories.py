@@ -157,7 +157,7 @@ class UserSessionRepo(UserSessionProtocol):
             if t is None:
                 orm.refresh_tokens.append(refresh_token_to_orm(td))
             else:
-                t.token_hash = td.token_hash
+                t.token_hash = td.hash
                 t.revoked_at = td.revoked_at
                 t.expire_at = td.expire_at
                 t.used_at = td.used_at
@@ -183,7 +183,7 @@ class PasswordResetRepo(PasswordResetProtocol):
         orm = (await self._session.scalars(stmt)).first()
 
         if orm is None:
-            raise Exception("not exists")
+            return None
 
         return password_reset_tokens_to_domain(orm)
 
@@ -194,7 +194,7 @@ class PasswordResetRepo(PasswordResetProtocol):
 
         orm = (await self._session.scalars(stmt)).first()
         if orm is None:
-            raise Exception("PasswordResetTokens not exists")
+            raise AppException(detail="PasswordResetTokens not exists")
 
         orm.expire_at = domain.expire_at
         orm.used_at = domain.used_at
