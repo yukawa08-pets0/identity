@@ -164,7 +164,7 @@ class UserSessionRepo(UserSessionProtocol):
 
 
 from domain import PasswordReset
-from mappers import password_reset_tokens_to_domain, password_reset_tokens_to_orm
+from mappers import password_reset_to_domain, password_reset_to_orm
 
 
 class PasswordResetRepo(PasswordResetProtocol):
@@ -172,10 +172,10 @@ class PasswordResetRepo(PasswordResetProtocol):
         self._session = session
 
     async def add(self, domain: PasswordReset) -> PasswordReset:
-        orm = password_reset_tokens_to_orm(domain)
+        orm = password_reset_to_orm(domain)
         self._session.add(orm)
         await self._session.flush()
-        return password_reset_tokens_to_domain(orm)
+        return password_reset_to_domain(orm)
 
     async def get_by_token_hash(self, token_hash: str) -> Optional[PasswordReset]:
         stmt = select(PasswordResetORM).where(PasswordResetORM.token_hash == token_hash)
@@ -185,7 +185,7 @@ class PasswordResetRepo(PasswordResetProtocol):
         if orm is None:
             return None
 
-        return password_reset_tokens_to_domain(orm)
+        return password_reset_to_domain(orm)
 
     async def save(self, domain: PasswordReset) -> None:
         stmt = select(PasswordResetORM).where(

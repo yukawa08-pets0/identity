@@ -10,7 +10,9 @@ def now_datetime() -> datetime:
 
 
 def expiration_calc_int(iat: int, minutes: int, days: int = 0) -> int:
-    datetime_ = datetime.fromtimestamp(iat) + timedelta(days=days, minutes=minutes)
+    datetime_ = datetime.fromtimestamp(iat, tz=timezone.utc) + timedelta(
+        days=days, minutes=minutes
+    )
     return int(datetime_.timestamp())
 
 

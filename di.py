@@ -1,6 +1,4 @@
 from uow import UnitOfWork
-
-from uow import UnitOfWork
 from repositories import UserRepo, UserSessionRepo, PasswordResetRepo
 from base import LocalSession
 from anotations import (

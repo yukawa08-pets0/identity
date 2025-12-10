@@ -197,7 +197,6 @@ async def logout_cmd(refresh_raw: str, uow: UnitOfWork):
         now = now_datetime()
         session = session.revoke(now).revoke_all_refresh_tokens(now)
         await uow.user_sessions.save(session)
-        await uow.commit()
 
 
 async def logout_all_cmd(user_id: UUID, uow: UnitOfWork):

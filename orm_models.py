@@ -89,7 +89,7 @@ class UserSessionORM(Base, UUIDMixin):
 
 
 class PasswordResetORM(Base):
-    __tablename__ = "password_resets_tokens"
+    __tablename__ = "password_resets"
     token_hash: Mapped[str] = mapped_column(String, primary_key=True)
     expire_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     user_id: Mapped[UUID] = mapped_column(

@@ -75,7 +75,7 @@ async def register(
     except AppException as e:
         raise HTTPException(status_code=409, detail={"detail": e.detail})
 
-    return {"status": "successfull"}
+    return {"status": "successful"}
 
 
 class LoginDto(BaseModel):

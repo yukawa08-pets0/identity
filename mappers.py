@@ -46,7 +46,7 @@ def user_session_to_orm(domain: UserSession) -> UserSessionORM:
     return orm
 
 
-def password_reset_tokens_to_orm(domain: PasswordReset) -> PasswordResetORM:
+def password_reset_to_orm(domain: PasswordReset) -> PasswordResetORM:
     return PasswordResetORM(
         token_hash=domain.token_hash,
         expire_at=domain.expire_at,
@@ -55,7 +55,7 @@ def password_reset_tokens_to_orm(domain: PasswordReset) -> PasswordResetORM:
     )
 
 
-def password_reset_tokens_to_domain(orm: PasswordResetORM) -> PasswordReset:
+def password_reset_to_domain(orm: PasswordResetORM) -> PasswordReset:
     return PasswordReset(
         token_hash=orm.token_hash,
         expire_at=orm.expire_at,

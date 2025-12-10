@@ -147,8 +147,9 @@ class UserSession:
         refresh_tokens = tuple()
         for t in self.refresh_tokens:
             if t.id == token.id:
-                refresh_tokens = (*refresh_tokens, t.mark_used(revoked_at))
-            refresh_tokens = (*refresh_tokens, t)
+                refresh_tokens = (*refresh_tokens, t.revoke(revoked_at))
+            else:
+                refresh_tokens = (*refresh_tokens, t)
 
         return UserSession(
             id=self.id,
