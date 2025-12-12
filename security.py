@@ -1,4 +1,3 @@
-# security.py
 from argon2 import PasswordHasher
 from argon2.low_level import Type
 
