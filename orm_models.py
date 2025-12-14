@@ -100,3 +100,33 @@ class PasswordResetORM(Base):
     used_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True, default=None
     )
+
+
+from sqlalchemy import Text, Enum, Index
+import enum
+
+
+class SigningKeyStatus(str, enum.Enum):
+    ACTIVE = "ACTIVE"
+    DEPRECATED = "DEPRECATED"
+    REVOKED = "REVOKED"
+
+
+class SigningKeys(Base):
+    __tablename__ = "signing_keys"
+    kid: Mapped[str] = mapped_column(String, primary_key=True)
+    public_key_pem: Mapped[str] = mapped_column(Text, nullable=False)
+    algorithm: Mapped[str] = mapped_column(String, nullable=False)
+    status: Mapped[SigningKeyStatus] = mapped_column(
+        Enum(SigningKeyStatus, enum="signing_key_status"),
+        nullable=False,
+    )
+
+    __table_args__ = (
+        Index(
+            "ux_signing_keys_single_active",
+            "status",
+            unique=True,
+            postgresql_where=(status == SigningKeyStatus.ACTIVE),
+        ),
+    )

@@ -4,12 +4,10 @@ from sqlalchemy.ext.asyncio import (
     AsyncSession,
     AsyncEngine,
 )
-
-# TODO добавить конфигурацию
-dsn = "postgresql+asyncpg://admin:admin@localhost:5432/authr"
+from settings import settings
 
 engine: AsyncEngine = create_async_engine(
-    dsn, echo=False, pool_size=10, max_overflow=20
+    settings.db_url, echo=False, pool_size=10, max_overflow=20
 )
 
 LocalSession = async_sessionmaker(

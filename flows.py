@@ -178,7 +178,7 @@ async def refresh_cmd(raw_token: str, uow: UnitOfWork) -> Tokens:
 
         session = session.add_refresh_token(new_refresh)
         access_token = issue_access_jwt(
-            id=session.user_id,
+            sub_id=session.user_id,
             session_id=session.id,
         )
 
