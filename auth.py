@@ -281,6 +281,9 @@ class RoleChecker:
     def __init__(self, require_role: str) -> None:
         self._require_role = require_role
 
+    # def __init__(self, asd: str, sd: int) -> None:
+    #     pass
+
     def __call__(
         self, user: Annotated[Principal, Depends(get_current_user)]
     ) -> Principal:

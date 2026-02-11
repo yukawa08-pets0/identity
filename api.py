@@ -161,7 +161,7 @@ from flows import refresh_cmd
 from fastapi import Cookie
 
 
-@app.post("/auth/refresh", status_code=200)
+@app.post("/auth/refresh", status_code=200, response_model=AccessTokenOut)
 async def refresh(
     uow: UoWDep,
     response: Response,
